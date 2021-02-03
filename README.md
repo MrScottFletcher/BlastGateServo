@@ -1,6 +1,9 @@
 # BlastGateServo with PWM Shield
 Blast gate servo controller for Arduino
 
+FORKED 2021-02-02 from https://github.com/Tailslide/BlastGateServo - to MrScottFletcher
+so that I could add multiple buttons and use a PWM shield without mucking up Greg Pringle's original
+
 See 3d printed parts at : https://www.thingiverse.com/thing:3301904
 
  *   Summry of Forked project:  
