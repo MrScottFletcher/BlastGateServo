@@ -24,38 +24,71 @@ int curselectedgate = -1;
 bool waitingforbuttonrelease = false;
 bool metermode = false; 
 
-static const bool has_button = HAS_BUTTON;
-static const int buttonPin = BUTTON_PIN;
-static const bool hasbutton = HAS_BUTTON;  
+volatile boolean ISR_updatePending;
+volatile int ISR_gateIndexToActivate;
+
+
+static const bool has_cyclebutton = HAS_BUTTON;
+static const int cyclebuttonPin = BUTTON_PIN;
+static const bool hascyclebutton = HAS_BUTTON;  
+const int num_gates = NUM_GATES;      
 
 GateServos gateservos(-1);  // object controlling blast gate servos
 AcSensors acsensors;        // objest controlling AC current sensors
+
+static const int gateButton_pin_1 = GATE_BUTTON_PIN_1;
+static const int gateButton_pin_2 = GATE_BUTTON_PIN_2;
+static const int gateButton_pin_3 = GATE_BUTTON_PIN_3;
+static const int gateButton_pin_4 = GATE_BUTTON_PIN_4;
+static const int gateButton_pin_5 = GATE_BUTTON_PIN_5;
+static const int gateButton_pin_6 = GATE_BUTTON_PIN_6;
+static const int gateButton_pin_7 = GATE_BUTTON_PIN_7;
+static const int gateButton_pin_8 = GATE_BUTTON_PIN_8;
+
+const int gatebuttonpin[8] = {gateButton_pin_1,gateButton_pin_2,gateButton_pin_3,gateButton_pin_4,gateButton_pin_5,gateButton_pin_6,gateButton_pin_7,gateButton_pin_8}; // LED pins    
+
+// the following variables are unsigned longs because the time, measured in
+// milliseconds, will quickly become a bigger number than can be stored in an int.
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 500;    // the debounce time; increase if the output flickers
 
 void setup() {
   #ifdef DEBUG
   Serial.begin(9600);
   #endif
 
+  Serial.println("16 channel PWM test!");
+
   gateservos.initializeGates();
 
+//  #ifdef DEBUG
+//  gateservos.testServo(0);
+//  gateservos.testServo(1);
+//  gateservos.testServo(2);
+//  gateservos.testServo(3);
+//  #endif
+
   // initialize the pushbutton pin as an input:
-  if (has_button) pinMode(buttonPin, INPUT);
+  if (has_cyclebutton) pinMode(cyclebuttonPin, INPUT);
+
+  //for (int thisgate = 0; thisgate < 4; thisgate++)
+  for (int thisgate = 0; thisgate < num_gates; thisgate++)
+  {
+     int pin = gatebuttonpin[thisgate];
+     if(pin >= 0) pinMode(pin, INPUT_PULLUP);
+  }
   
-<<<<<<< Updated upstream
-  if (digitalRead(buttonPin)== HIGH) // user held down button on startup, go into meter mode
-=======
   //Cant send parms in/out of ISRs, so gonna do it the old-fashioned way...
-  if(gatebuttonpin[0] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[0]), gateButtonPressISR_1, FALLING);
-  if(gatebuttonpin[1] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[1]), gateButtonPressISR_2, FALLING);
-  if(gatebuttonpin[2] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[2]), gateButtonPressISR_3, FALLING);
-  if(gatebuttonpin[3] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[3]), gateButtonPressISR_4, FALLING);
-  if(gatebuttonpin[4] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[4]), gateButtonPressISR_5, FALLING);
-  if(gatebuttonpin[5] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[5]), gateButtonPressISR_6, FALLING);
-  if(gatebuttonpin[6] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[6]), gateButtonPressISR_7, FALLING);
-  if(gatebuttonpin[7] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[7]), gateButtonPressISR_8, FALLING);
+  if(gatebuttonpin[0] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[0]), gateButtonPressISR_1, CHANGE);
+  if(gatebuttonpin[1] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[1]), gateButtonPressISR_2, CHANGE);
+  if(gatebuttonpin[2] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[2]), gateButtonPressISR_3, CHANGE);
+  if(gatebuttonpin[3] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[3]), gateButtonPressISR_4, CHANGE);
+  if(gatebuttonpin[4] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[4]), gateButtonPressISR_5, CHANGE);
+  if(gatebuttonpin[5] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[5]), gateButtonPressISR_6, CHANGE);
+  if(gatebuttonpin[6] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[6]), gateButtonPressISR_7, CHANGE);
+  if(gatebuttonpin[7] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[7]), gateButtonPressISR_8, CHANGE);
 
   if (has_cyclebutton && digitalRead(cyclebuttonPin)== HIGH) // user held down button on startup, go into meter mode
->>>>>>> Stashed changes
       metermode = true;
   else metermode = false;
 
@@ -75,6 +108,9 @@ void loop()
   if (metermode)  acsensors.DisplayMeter();  // if user put device into meter mode, use LED lights to display sensor signal.
   else // not meter mode
   {
+    //================================================
+    // AC SENSOR LOOP
+    //================================================
     for (int cursensor=0; cursensor < acsensors.num_ac_sensors; cursensor++)
     {
         // This sensor is triggered by power tool
@@ -82,7 +118,7 @@ void loop()
         if (acsensors.Triggered(cursensor))
         {
           // this tool is active, output info to debug
-          DPRINT(" TOOL ON #"); DPRINT(cursensor); DPRINT(" OFF READING:"); DPRINT(offReadings[cursensor]); DPRINT(" AVG SENSOR READING:"); DPRINTLN(avgSensorReading(cursensor));
+          //DPRINT(" TOOL ON #"); DPRINT(cursensor); DPRINT(" OFF READING:"); DPRINT(offReadings[cursensor]); DPRINT(" AVG SENSOR READING:"); DPRINTLN(avgSensorReading(cursensor));
 
           // ignore button if tool detected
           waitingforbuttonrelease = false;
@@ -110,11 +146,11 @@ void loop()
           }
         }
     }
-
+    //================================================
     // read the state of the pushbutton value.  
     // Allow the user to light up the appropriate gate and pause before opening/closing the gates.
-    if (hasbutton) buttonState = digitalRead(buttonPin);
-    if (hasbutton && !toolon && buttonState == HIGH)
+    if (hascyclebutton) buttonState = digitalRead(cyclebuttonPin);
+    if (hascyclebutton && !toolon && buttonState == HIGH)
     {
       if (! waitingforbuttonrelease)
       {
@@ -130,7 +166,7 @@ void loop()
       }
     }
     
-    if (hasbutton && !toolon && buttonState == LOW)
+    if (hascyclebutton && !toolon && buttonState == LOW)
     {
       if (waitingforbuttonrelease)
       {
@@ -143,8 +179,6 @@ void loop()
           gateservos.ManuallyOpenGate(curselectedgate);
       }
     }
-<<<<<<< Updated upstream
-=======
     //================================================
     //  ISR EVENT WATCHER
     //================================================
@@ -173,31 +207,19 @@ void loop()
           gateservos.opengate(curselectedgate);
           //Clear the flag to allow another update
           ISR_updatePending = false;
-
-          //turn on power to the vacuum
-          
         }
         else
         {
           //turn it off, like a light switch, now it's gone!
           DPRINTLN("ISR TURN OFF");
-
-          //actually, just leave it open
-          //gateservos.gateopen[curselectedgate] = false;
-          //gateservos.closegate(curselectedgate);
-
-          //but turn off the LED
+          gateservos.gateopen[curselectedgate] = false;
           gateservos.ledoff(curselectedgate);
-
-          //and turn off the power to the vacuum
-          
-
+          gateservos.closegate(curselectedgate);
           //Clear the flag to allow another update
           ISR_updatePending = false;
         }
     }
     //================================================
->>>>>>> Stashed changes
   }
   
   if (metermode)
@@ -213,5 +235,69 @@ void loop()
      else
         lastbuttonpushms +=50;
   }
-  
+}
+
+void gateButtonPressISR_1() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 1 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 0;
+  }
+}
+void gateButtonPressISR_2() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 2 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 1;
+  }
+}
+void gateButtonPressISR_3() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 3 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 2;
+  }
+}
+void gateButtonPressISR_4() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 4 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 3;
+  }
+}
+void gateButtonPressISR_5() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 5 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 4;
+  }
+}
+void gateButtonPressISR_6() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 6 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 5;
+  }
+}
+void gateButtonPressISR_7() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 7 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 6;
+  }
+}
+void gateButtonPressISR_8() {
+  if ((millis() - lastDebounceTime) > debounceDelay) 
+  {
+    DPRINTLN("BUTTON 8 DETECTED");
+    ISR_updatePending = true;
+    ISR_gateIndexToActivate = 7;
+  }
 }

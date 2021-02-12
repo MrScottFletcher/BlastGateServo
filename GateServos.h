@@ -13,6 +13,7 @@
 
   class GateServos {
     static const int num_servos = NUM_GATES;
+    static const int num_gateButtons = NUM_GATE_BUTTONS;
     static const int num_leds = NUM_LEDS;
     static const int servo_pin_1 = SERVO_PIN_1;
     static const int servo_pin_2 = SERVO_PIN_2; 
@@ -23,23 +24,23 @@
     static const int servo_pin_7 = SERVO_PIN_7;
     static const int servo_pin_8 = SERVO_PIN_8;
 
-    static const int servo_max_1 = SERVO_MAX_1;
-    static const int servo_max_2 = SERVO_MAX_2;
-    static const int servo_max_3 = SERVO_MAX_3;
-    static const int servo_max_4 = SERVO_MAX_4;
-    static const int servo_max_5 = SERVO_MAX_5;
-    static const int servo_max_6 = SERVO_MAX_6;
-    static const int servo_max_7 = SERVO_MAX_7;
-    static const int servo_max_8 = SERVO_MAX_8;
+    static const int servo_closed_1 = SERVO_CLOSED_1;
+    static const int servo_closed_2 = SERVO_CLOSED_2;
+    static const int servo_closed_3 = SERVO_CLOSED_3;
+    static const int servo_closed_4 = SERVO_CLOSED_4;
+    static const int servo_closed_5 = SERVO_CLOSED_5;
+    static const int servo_closed_6 = SERVO_CLOSED_6;
+    static const int servo_closed_7 = SERVO_CLOSED_7;
+    static const int servo_closed_8 = SERVO_CLOSED_8;
 
-    static const int servo_min_1 = SERVO_MIN_1;
-    static const int servo_min_2 = SERVO_MIN_2;
-    static const int servo_min_3 = SERVO_MIN_3;
-    static const int servo_min_4 = SERVO_MIN_4;
-    static const int servo_min_5 = SERVO_MIN_5;
-    static const int servo_min_6 = SERVO_MIN_6;
-    static const int servo_min_7 = SERVO_MIN_7;
-    static const int servo_min_8 = SERVO_MIN_8;
+    static const int servo_open_1 = SERVO_OPEN_1;
+    static const int servo_open_2 = SERVO_OPEN_2;
+    static const int servo_open_3 = SERVO_OPEN_3;
+    static const int servo_open_4 = SERVO_OPEN_4;
+    static const int servo_open_5 = SERVO_OPEN_5;
+    static const int servo_open_6 = SERVO_OPEN_6;
+    static const int servo_open_7 = SERVO_OPEN_7;
+    static const int servo_open_8 = SERVO_OPEN_8;
 
     static const int led_pin_1 = LED_PIN_1;
     static const int led_pin_2 = LED_PIN_2;
@@ -49,15 +50,26 @@
     static const int led_pin_6 = LED_PIN_6;
     static const int led_pin_7 = LED_PIN_7;
     static const int led_pin_8 = LED_PIN_8;
+
+    static const int gateButton_pin_1 = GATE_BUTTON_PIN_1;
+    static const int gateButton_pin_2 = GATE_BUTTON_PIN_2;
+    static const int gateButton_pin_3 = GATE_BUTTON_PIN_3;
+    static const int gateButton_pin_4 = GATE_BUTTON_PIN_4;
+    static const int gateButton_pin_5 = GATE_BUTTON_PIN_5;
+    static const int gateButton_pin_6 = GATE_BUTTON_PIN_6;
+    static const int gateButton_pin_7 = GATE_BUTTON_PIN_7;
+    static const int gateButton_pin_8 = GATE_BUTTON_PIN_8;
+    
     static const int closedelay = CLOSE_DELAY;
 
     const int servopin[8] = {servo_pin_1,servo_pin_2,servo_pin_3,servo_pin_4,servo_pin_5,servo_pin_6,servo_pin_7,servo_pin_8}; 
-    const int maxservo[8] = {servo_max_1,servo_max_2,servo_max_3,servo_max_4,servo_max_5,servo_max_6,servo_max_7,servo_max_8};
-    const int minservo[8] = {servo_min_1,servo_min_2,servo_min_3,servo_min_4,servo_min_5,servo_min_6,servo_min_7,servo_min_8};
+    const int servoClosedPos[8] = {servo_closed_1,servo_closed_2,servo_closed_3,servo_closed_4,servo_closed_5,servo_closed_6,servo_closed_7,servo_closed_8};
+    const int servoOpenPos[8] = {servo_open_1,servo_open_2,servo_open_3,servo_open_4,servo_open_5,servo_open_6,servo_open_7,servo_open_8};
     const int ledpin[8] = {led_pin_1,led_pin_2,led_pin_3,led_pin_4,led_pin_5,led_pin_6,led_pin_7,led_pin_8}; // LED pins    
+    const int gatebuttonpin[8] = {gateButton_pin_1,gateButton_pin_2,gateButton_pin_3,gateButton_pin_4,gateButton_pin_5,gateButton_pin_6,gateButton_pin_7,gateButton_pin_8}; // LED pins    
 
     
-    Servo myservo;  // create servo object to control a servo
+    //Servo myservo;  // create servo object to control a servo
              // a maximum of eight servo objects can be created
     
     public:    
