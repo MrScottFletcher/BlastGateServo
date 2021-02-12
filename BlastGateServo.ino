@@ -205,17 +205,28 @@ void loop()
           gateservos.gateopen[curselectedgate] = true;
           gateservos.ledon(curselectedgate);
           gateservos.opengate(curselectedgate);
+          gateservos.powerOn();
           //Clear the flag to allow another update
           ISR_updatePending = false;
+          
         }
         else
         {
-          //turn it off, like a light switch, now it's gone!
-          DPRINTLN("ISR TURN OFF");
-          gateservos.gateopen[curselectedgate] = false;
-          gateservos.ledoff(curselectedgate);
-          gateservos.closegate(curselectedgate);
+          //turn it off, like  a light switch, now it's gone!
+          DPRINTLN("ISR SAME BUTTON - TOGGLE POWER");
+//          gateservos.gateopen[curselectedgate] = false;
+//          gateservos.closegate(curselectedgate);
+
           //Clear the flag to allow another update
+          gateservos.powerToggle();
+
+          if(gateservos.bPowerOn){
+            gateservos.ledon(curselectedgate);
+          }
+          else{
+            gateservos.ledoff(curselectedgate);
+          }
+          
           ISR_updatePending = false;
         }
     }

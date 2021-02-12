@@ -59,7 +59,17 @@
     static const int gateButton_pin_6 = GATE_BUTTON_PIN_6;
     static const int gateButton_pin_7 = GATE_BUTTON_PIN_7;
     static const int gateButton_pin_8 = GATE_BUTTON_PIN_8;
-    
+
+    static const int powerservo_pin_off = POWER_SERVO_PIN_OFF;
+    static const int powerservo_pin_on = POWER_SERVO_PIN_ON;
+
+    static const int powerservo_max_off = POWER_SERVO_MAX_OFF;
+    static const int powerservo_max_on = POWER_SERVO_MAX_ON;
+
+    static const int powerservo_min_off = POWER_SERVO_MIN_OFF;
+    static const int powerservo_min_on = POWER_SERVO_MIN_ON;
+
+
     static const int closedelay = CLOSE_DELAY;
 
     const int servopin[8] = {servo_pin_1,servo_pin_2,servo_pin_3,servo_pin_4,servo_pin_5,servo_pin_6,servo_pin_7,servo_pin_8}; 
@@ -86,6 +96,13 @@
       int curopengate = -1;                 // cuurrently open gate selected manually with button
       const int opendelay = OPEN_DELAY;     // ms delay to allow servo to completely open gate
       bool gateopen[8] = {false, false, false, false,false, false, false, false};   // array indicating which gates are open
+
+      void powerOn();   // open the given gate number
+      void powerOff();  // close the given gate number
+      void powerToggle();
+      void initializePower();       // turn off power
+      bool bPowerOn = false;
+
   };
   
 

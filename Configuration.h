@@ -46,6 +46,10 @@
 #define SERVO_PIN_7 -1; //6
 #define SERVO_PIN_8 -1;//---------
 
+#define POWER_SERVO_PIN_ON 14; //Set to -1 if you don't have one
+#define POWER_SERVO_PIN_OFF 15; //Set to -1 if you don't have one
+
+
 // AC Sensor Pins
 #define AC_SENSOR_PIN_1 -1;// A0; // Pin for first AC sensor
 #define AC_SENSOR_PIN_2 -1;// A1; // ..etc...
@@ -80,6 +84,12 @@
 #define SERVO_OPEN_7 -1;
 #define SERVO_OPEN_8 -1;
 
+#define POWER_SERVO_MAX_OFF SERVOMAX;
+#define POWER_SERVO_MAX_ON SERVOMAX;
+
+#define POWER_SERVO_MIN_OFF SERVOMIN;
+#define POWER_SERVO_MIN_ON SERVOMIN;
+
 // LED pins 
 #define LED_PIN_1 7;  // Pin for first LED indicator
 #define LED_PIN_2 8;  // ...etc..
@@ -97,8 +107,8 @@
 #define GATE_BUTTON_PIN_2 3;  // ...etc..
 #define GATE_BUTTON_PIN_3 18;
 #define GATE_BUTTON_PIN_4 19;
-#define GATE_BUTTON_PIN_5 20;
-#define GATE_BUTTON_PIN_6 21;
+#define GATE_BUTTON_PIN_5 -1; //20;
+#define GATE_BUTTON_PIN_6 -1; //21;
 #define GATE_BUTTON_PIN_7 -1;
 #define GATE_BUTTON_PIN_8 -1;
 
