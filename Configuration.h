@@ -87,5 +87,20 @@
 #define LED_PIN_7 -1;
 #define LED_PIN_8 -1;
 
+<<<<<<< Updated upstream
+=======
+// GATE Button pins
+// AT Mega boards can use these pins for ISR (Interrupts) 2, 3, 18, 19, 20, 21
+//https://www.arduino.cc/reference/en/language/functions/external-interrupts/attachinterrupt/
+#define GATE_BUTTON_PIN_1 2;  // Pin for first Gate Button (13 is reserved for the cycle button of the original)
+#define GATE_BUTTON_PIN_2 3;  // ...etc..
+#define GATE_BUTTON_PIN_3 18;
+#define GATE_BUTTON_PIN_4 19;
+#define GATE_BUTTON_PIN_5 -1; //20;
+#define GATE_BUTTON_PIN_6 -1; //21;
+#define GATE_BUTTON_PIN_7 -1;
+#define GATE_BUTTON_PIN_8 -1;
+
+>>>>>>> Stashed changes
 
 #endif // CONFIGURATION_H
