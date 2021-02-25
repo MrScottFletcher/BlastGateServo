@@ -50,7 +50,9 @@ const int gatebuttonpin[8] = {gateButton_pin_1,gateButton_pin_2,gateButton_pin_3
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
 unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 500;    // the debounce time; increase if the output flickers
+unsigned long debounceDelay = 200;    // the debounce time; increase if the output flickers
+unsigned long lastButtonDownTime = 0;  // the last time the output pin was toggled
+unsigned long minButtonHoldMillis = 500;  // the length o a button press to consider 'detected'
 
 void setup() {
   #ifdef DEBUG
@@ -79,14 +81,14 @@ void setup() {
   }
   
   //Cant send parms in/out of ISRs, so gonna do it the old-fashioned way...
-  if(gatebuttonpin[0] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[0]), gateButtonPressISR_1, CHANGE);
-  if(gatebuttonpin[1] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[1]), gateButtonPressISR_2, CHANGE);
-  if(gatebuttonpin[2] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[2]), gateButtonPressISR_3, CHANGE);
-  if(gatebuttonpin[3] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[3]), gateButtonPressISR_4, CHANGE);
-  if(gatebuttonpin[4] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[4]), gateButtonPressISR_5, CHANGE);
-  if(gatebuttonpin[5] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[5]), gateButtonPressISR_6, CHANGE);
-  if(gatebuttonpin[6] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[6]), gateButtonPressISR_7, CHANGE);
-  if(gatebuttonpin[7] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[7]), gateButtonPressISR_8, CHANGE);
+  if(gatebuttonpin[0] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[0]), gateButtonPressISR_1, FALLING);
+  if(gatebuttonpin[1] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[1]), gateButtonPressISR_2, FALLING);
+  if(gatebuttonpin[2] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[2]), gateButtonPressISR_3, FALLING);
+  if(gatebuttonpin[3] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[3]), gateButtonPressISR_4, FALLING);
+  if(gatebuttonpin[4] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[4]), gateButtonPressISR_5, FALLING);
+  if(gatebuttonpin[5] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[5]), gateButtonPressISR_6, FALLING);
+  if(gatebuttonpin[6] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[6]), gateButtonPressISR_7, FALLING);
+  if(gatebuttonpin[7] >=0) attachInterrupt(digitalPinToInterrupt(gatebuttonpin[7]), gateButtonPressISR_8, FALLING);
 
   if (has_cyclebutton && digitalRead(cyclebuttonPin)== HIGH) // user held down button on startup, go into meter mode
       metermode = true;
@@ -186,48 +188,121 @@ void loop()
         DPRINT("ISR detected! For Gate: ");
         DPRINTLN(ISR_gateIndexToActivate);
         lastDebounceTime = millis();
+
         // whatever the reading is at, it's been there for longer than the debounce
         // delay, so take it as the actual current state:
-        if(curselectedgate != ISR_gateIndexToActivate){
-          //shut the gate
-          DPRINT("Closing gate: ");
-          DPRINTLN(curselectedgate);
-          gateservos.gateopen[curselectedgate] = false;
-          gateservos.ledoff(curselectedgate);
-          gateservos.closegate(curselectedgate);
-  
-          curselectedgate = ISR_gateIndexToActivate;
-        }
-        if(gateservos.gateopen[curselectedgate] == false)
-        {
-          //turn it on
-          DPRINTLN("ISR TURN ON");
-          gateservos.gateopen[curselectedgate] = true;
-          gateservos.ledon(curselectedgate);
-          gateservos.opengate(curselectedgate);
-          gateservos.powerOn();
-          //Clear the flag to allow another update
-          ISR_updatePending = false;
-          
-        }
-        else
-        {
-          //turn it off, like  a light switch, now it's gone!
-          DPRINTLN("ISR SAME BUTTON - TOGGLE POWER");
-//          gateservos.gateopen[curselectedgate] = false;
-//          gateservos.closegate(curselectedgate);
 
-          //Clear the flag to allow another update
-          gateservos.powerToggle();
+        //-----------------------------------------
+        //Verify an actual button press and not some spurious AC spike from the 
+        //miter saw or ruoter table
+        lastButtonDownTime = lastDebounceTime;
 
-          if(gateservos.bPowerOn){
-            gateservos.ledon(curselectedgate);
+        //The debounce in the ISR methods prevent double-hits, but this while loop
+        //gets us over the valley of noise and dispair before we actually test the button
+        while(millis() < lastButtonDownTime + debounceDelay)
+        {
+          //wait for the debounce period to elapse
+          delay(50);
+        }
+
+        //with us past the noise valley of a button press, we enter the check loop to
+        //see if the button is still pressed.  (Some of this loop time was actually 
+        //consumed by the debounce loop above.)
+        bool actualButtonPress = true;
+        while(actualButtonPress && (millis() < lastButtonDownTime + minButtonHoldMillis))
+        {
+          int thisButtonState = digitalRead(gatebuttonpin[ISR_gateIndexToActivate]);
+          //Since we use INPUT_PULLUP, the button is HIGH when open (not pressed), and LOW when closed (pressed)
+          if(thisButtonState == HIGH)
+          {
+            //Either user did not hold button down long enough, or this was a false
+            //detection caused by power tool noise.  Setting actualButtonPress to false
+            //will break the loop and prevent the subsequent IF block from entering
+            actualButtonPress = false;
+
+            //...and call off the ISR dogs - false alarm.
+            ISR_updatePending = false;
           }
-          else{
+          //else, keep checking - ensure the button is still pressed for the required duration
+        }
+
+        //-----------------------------------------
+        if(actualButtonPress)
+        {
+          if(curselectedgate != ISR_gateIndexToActivate)
+          {
+            //shut the gate
+            DPRINT("Closing gate: ");
+            DPRINTLN(curselectedgate);
+
+            if(gateservos.bPowerOn)
+            {
+             //turn off the vacuum - too hard to move gates under vacuum!
+              gateservos.powerOff();
+              gateservos.flashLedAndDelay(ISR_gateIndexToActivate, 5000, 250);
+            }
+
+            //turn off the old gate LED
             gateservos.ledoff(curselectedgate);
+
+            gateservos.gateopen[curselectedgate] = false;
+            gateservos.closegate(curselectedgate);
+
+            //No need to wait here.
+            //gateservos.flashLedAndDelay(ISR_gateIndexToActivate, 2000, 250);
+    
+            curselectedgate = ISR_gateIndexToActivate;
           }
-          
-          ISR_updatePending = false;
+
+          //now, either the desired gate is open already, or it's not...
+          if(gateservos.gateopen[curselectedgate] == false)
+          {
+            //Not the current gate? turn it on
+            DPRINTLN("ISR TURN ON");
+            gateservos.gateopen[curselectedgate] = true;
+            
+            //turn off the vacuum - too hard to move gates under vacuum!
+            if(gateservos.bPowerOn)
+            {
+              gateservos.powerOff();
+              gateservos.flashLedAndDelay(curselectedgate, 5000, 250);
+            }
+
+            gateservos.opengate(curselectedgate);
+            gateservos.flashLedAndDelay(curselectedgate, 2000, 125);
+
+            //give the user final LED feedback
+            gateservos.ledon(curselectedgate);
+
+            gateservos.powerOn();
+            //Clear the flag to allow another update
+            ISR_updatePending = false;
+            
+          }
+          else
+          {
+            //turn it off, like  a light switch, now it's gone!
+            DPRINTLN("ISR SAME BUTTON - TOGGLE POWER");
+  
+            //give the user LED feedback first, before all the servo rigamarole...
+            //because we're toggling, do it beforehand
+ 
+            //hit the power button on/off
+            gateservos.powerToggle();
+
+            gateservos.flashLedAndDelay(curselectedgate, 2000, 125);
+
+            //Set the LED to the fnial state
+            if(gateservos.bPowerOn){
+              gateservos.ledon(curselectedgate);
+            }
+            else{
+              gateservos.ledoff(curselectedgate);
+            }
+           
+            //Clear the flag to allow another update
+            ISR_updatePending = false;
+          }
         }
     }
     //================================================

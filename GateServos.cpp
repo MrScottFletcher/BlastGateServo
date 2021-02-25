@@ -124,6 +124,23 @@
     digitalWrite(ledpin[gatenum], LOW);
   }
 
+  void GateServos::flashLedAndDelay(int gatenum, unsigned long msTotalDelay, unsigned long flashDelay)
+  {
+    unsigned long entryTime = millis();
+    bool bOn = true;
+    while(millis() < entryTime + msTotalDelay)
+    {
+      if(bOn){
+        ledon(gatenum);
+      }
+      else{
+        ledoff(gatenum);
+      }
+      bOn = !bOn;
+      delay(flashDelay);  
+    }
+  }
+
   // User has pushed button to manually open given gate
   void GateServos::ManuallyOpenGate(int curselectedgate)
   {
@@ -168,7 +185,7 @@
           DPRINTLN("");
           bPowerOn = true;
 
-          int pulselength = map(0, 0, 180, powerservo_max_on, powerservo_min_on);
+          int pulselength = map(15, 0, 180, powerservo_max_on, powerservo_min_on);
           pwm.setPWM(powerservo_pin_on, 0, pulselength);
 
           delay(500);
@@ -195,7 +212,7 @@
       DPRINTLN("");
       bPowerOn = false;
 
-      int pulselength = map(35, 0, 180, powerservo_max_off, powerservo_min_off);
+      int pulselength = map(30, 0, 180, powerservo_max_off, powerservo_min_off);
       pwm.setPWM(powerservo_pin_off, 0, pulselength);
 
       delay(500);

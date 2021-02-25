@@ -89,6 +89,7 @@
       void initializeGates();       // initialize gates and close them all
       void ledoff(int gatenum);     // turn off given LED
       void ledon(int gatenum);      // turn on given LED
+      void flashLedAndDelay(int gatenum, unsigned long msTotalDelay, unsigned long flashDelay);      // flash an LED and delay
       void ManuallyOpenGate(int gatenum);   // User manually opening given gate using the button
       int firstgateopen();                  // Returns ID of first gate that is open
       void testServo(int servopin);         // Test given servo pin (debug function)
